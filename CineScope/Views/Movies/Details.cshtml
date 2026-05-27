@@ -1,0 +1,161 @@
+@model CineScope.Models.MovieModel
+
+@{
+    ViewData["Title"] = $"{Model.Title} - Movie Details";
+}
+
+<link rel="stylesheet" href="~/css/movies.css" />
+
+<nav class="navbar">
+    <div class="logo">Cine<span>Scope</span></div>
+
+    <ul class="nav-links">
+        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li><a asp-controller="Movies" asp-action="Index" class="active">Movies</a></li>
+        <li><a asp-controller="Genres" asp-action="Index">Genres</a></li>
+        <li><a asp-controller="Home" asp-action="About">About</a></li>
+        <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
+    </ul>
+
+    <div class="nav-actions">
+        <div class="notification">
+            <span class="bell">🔔</span>
+            <span class="badge">3</span>
+        </div>
+
+        <div class="profile">👤 Admin ▾</div>
+    </div>
+</nav>
+
+<main class="page">
+    <section class="card details-card">
+        <div class="details-breadcrumb">
+            <a asp-controller="Movies" asp-action="Index">← Back to Movies</a>
+        </div>
+
+        <div class="details-header">
+            <div class="poster-section">
+                <img src="@Model.PosterUrl" alt="@Model.Title poster" class="movie-poster" />
+                <div class="action-buttons">
+                    <a asp-controller="Movies" asp-action="Edit" asp-route-id="@Model.Id" class="btn-primary">✎ Edit Movie</a>
+                    <a asp-controller="Movies" asp-action="Delete" asp-route-id="@Model.Id" class="btn-danger" onclick="return confirm('Are you sure?')">🗑 Delete Movie</a>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h1>@Model.Title</h1>
+
+                <div class="movie-meta">
+                    <div class="meta-item">
+                        <label>Release Year</label>
+                        <span class="meta-value">@Model.ReleaseYear</span>
+                    </div>
+
+                    <div class="meta-item">
+                        <label>Genre</label>
+                        <span class="meta-value genre-tag">@Model.Genre</span>
+                    </div>
+
+                    <div class="meta-item">
+                        <label>Duration</label>
+                        <span class="meta-value">@Model.Duration minutes</span>
+                    </div>
+
+                    <div class="meta-item">
+                        <label>Rating</label>
+                        <span class="meta-value rating">
+                            @for (int i = 0; i < 5; i++)
+                            {
+                                if (i < Math.Floor(Model.Rating))
+                                {
+                                    <span class="star filled">★</span>
+                                }
+                                else if (i == Math.Floor(Model.Rating) && Model.Rating % 1 != 0)
+                                {
+                                    <span class="star half">★</span>
+                                }
+                                else
+                                {
+                                    <span class="star empty">☆</span>
+                                }
+                            }
+                            <span class="rating-value">@Model.Rating / 5.0</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider" />
+
+        <div class="details-body">
+            <div class="description-section">
+                <h2>Synopsis</h2>
+                <p class="description-text">@(string.IsNullOrEmpty(Model.Description) ? "No description available." : Model.Description)</p>
+            </div>
+
+            <div class="info-cards">
+                <div class="info-card">
+                    <h3>Movie Information</h3>
+                    <dl>
+                        <dt>Title:</dt>
+                        <dd>@Model.Title</dd>
+
+                        <dt>Genre:</dt>
+                        <dd>@Model.Genre</dd>
+
+                        <dt>Release Year:</dt>
+                        <dd>@Model.ReleaseYear</dd>
+
+                        <dt>Duration:</dt>
+                        <dd>@Model.Duration minutes</dd>
+
+                        <dt>Rating:</dt>
+                        <dd>@Model.Rating / 5.0</dd>
+
+                        <dt>Movie ID:</dt>
+                        <dd>@Model.Id</dd>
+                    </dl>
+                </div>
+
+                <div class="info-card stats-card">
+                    <h3>Statistics</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Popularity</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @(Model.Rating * 20)%"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-label">Age Rating</span>
+                        <span class="stat-value">@GetAgeRating(Model.Rating)</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-label">Year Age</span>
+                        <span class="stat-value">@(DateTime.Now.Year - Model.ReleaseYear) years old</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="details-footer">
+            <p class="timestamp">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+            <a asp-controller="Movies" asp-action="Index" class="btn-secondary">Back to List</a>
+        </div>
+    </section>
+</main>
+
+@functions {
+    private string GetAgeRating(decimal rating)
+    {
+        return rating switch
+        {
+            >= 4.5m => "PG-13",
+            >= 3.5m => "PG",
+            >= 2.5m => "G",
+            _ => "Not Rated"
+        };
+    }
+}

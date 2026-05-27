@@ -1,0 +1,53 @@
+@model List<CineScope.Models.MovieModel>
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<div class="container mt-4">
+    <h1>Search Results for "@ViewData["SearchQuery"]"</h1>
+    
+    <a href="@Url.Action("Search")" class="btn btn-secondary mb-3">← New Search</a>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-info">No movies found. Try a different search term.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var movie in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        @if (!string.IsNullOrEmpty(movie.PosterUrl) && movie.PosterUrl != "N/A")
+                        {
+                            <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="height: 300px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 300px;">
+                                <span class="text-white">No Image</span>
+                            </div>
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">@movie.Title</h5>
+                            <p class="card-text small">
+                                <strong>Year:</strong> @movie.ReleaseYear<br />
+                                <strong>Rating:</strong> @movie.Rating/10<br />
+                                <strong>Duration:</strong> @movie.Duration min<br />
+                                <strong>Genre:</strong> @movie.Genre
+                            </p>
+                            <p class="card-text" style="font-size: 0.9rem; max-height: 100px; overflow: hidden;">@movie.Description</p>
+                        </div>
+                        <div class="card-footer">
+                            <form method="post" action="@Url.Action("ImportMovie")" style="display: inline;">
+                                <input type="hidden" name="imdbId" value="@movie.ImdbId" />
+                                <button type="submit" class="btn btn-success btn-sm w-100">Import to DB</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

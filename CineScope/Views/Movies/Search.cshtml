@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Search Movies";
+}
+
+<div class="container mt-4">
+    <h1>Search OMDB</h1>
+    
+    <form method="post" action="@Url.Action("SearchMovies")" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="searchQuery" class="form-control" placeholder="Search for movies..." required />
+            <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+        @if (ViewData.ModelState.Values.SelectMany(v => v.Errors).Any())
+        {
+            <div class="alert alert-danger mt-2">
+                @Html.ValidationSummary(true)
+            </div>
+        }
+    </form>
+
+    <p class="text-muted">Enter a movie title to search the OMDB database</p>
+</div>
