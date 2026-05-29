@@ -1,0 +1,64 @@
+@page
+@using CineScope.Pages.Account
+@using System.Security.Claims
+@model ProfileModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h3 class="mb-0">User Profile</h3>
+                </div>
+                <div class="card-body">
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>@User.Identity.Name</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>@User.FindFirst(ClaimTypes.Email)?.Value ?? "N/A"</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>User ID:</strong></td>
+                                    <td>@User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "N/A"</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Roles:</strong></td>
+                                    <td>
+                                        @{
+                                            var roles = User.FindAll(ClaimTypes.Role);
+                                            if (roles.Any())
+                                            {
+                                                foreach (var role in roles)
+                                                {
+                                                    <span class="badge bg-info">@role.Value</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span>No roles assigned</span>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <a href="/" class="btn btn-primary">Back to Home</a>
+                    }
+                    else
+                    {
+                        <p class="alert alert-warning">You are not logged in. Please <a href="/Account/Login">sign in</a>.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

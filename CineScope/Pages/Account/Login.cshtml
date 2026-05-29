@@ -1,0 +1,36 @@
+@page
+@using CineScope.Pages.Account
+@model LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h3 class="mb-0">Login to CineScope</h3>
+                </div>
+                <div class="card-body">
+                    @if (User?.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="alert alert-success">
+                            Welcome, <strong>@User.Identity.Name</strong>!
+                        </div>
+                        <p>You are already logged in.</p>
+                        <a href="/" class="btn btn-primary">Go to Home</a>
+                    }
+                    else
+                    {
+                        <p class="mb-4">Sign in with your Microsoft account to access CineScope.</p>
+                        <a href="javascript:void(0)" onclick="document.getElementById('loginForm').submit();" class="btn btn-primary btn-lg w-100">
+                            Sign In with Microsoft
+                        </a>
+                        <form id="loginForm" action="~/signin-oidc" method="post" style="display:none;"></form>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
