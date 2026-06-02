@@ -2,21 +2,22 @@
     ViewData["Title"] = "Search Movies";
 }
 
-<div class="container mt-4">
-    <h1>Search OMDB</h1>
-    
-    <form method="post" action="@Url.Action("SearchMovies")" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="searchQuery" class="form-control" placeholder="Search for movies..." required />
-            <button class="btn btn-primary" type="submit">Search</button>
-        </div>
+<div class="cinema-page compact-page">
+    <section class="search-hero">
+        <p class="eyebrow">OMDb discovery</p>
+        <h1>Find the next title for your collection.</h1>
+        <p>Search by movie title, review the results, and import the best match into CineScope.</p>
+
+        <form method="post" action="@Url.Action("SearchMovies")" class="spotlight-search">
+            <input type="text" name="searchQuery" placeholder="Search for movies..." required />
+            <button type="submit">Search</button>
+        </form>
+
         @if (ViewData.ModelState.Values.SelectMany(v => v.Errors).Any())
         {
-            <div class="alert alert-danger mt-2">
+            <div class="cinema-alert cinema-alert-danger" role="alert">
                 @Html.ValidationSummary(true)
             </div>
         }
-    </form>
-
-    <p class="text-muted">Enter a movie title to search the OMDB database</p>
+    </section>
 </div>

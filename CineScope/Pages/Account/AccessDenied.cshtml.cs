@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace CineScope.Pages.Admin
+namespace CineScope.Pages.Account
 {
-    [Authorize(Policy = "Admin")]
-    public class DashboardModel : PageModel
+    [AllowAnonymous]
+    public class AccessDeniedModel : PageModel
     {
         public void OnGet()
         {

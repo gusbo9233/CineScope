@@ -4,46 +4,22 @@
     ViewData["Title"] = "Edit Movie";
 }
 
-<link rel="stylesheet" href="~/css/movies.css" />
+<div class="cinema-page compact-page">
+    <a asp-controller="Movies" asp-action="Details" asp-route-id="@Model.Id" class="back-link">Back to Details</a>
 
-<nav class="navbar">
-    <div class="logo">Cine<span>Scope</span></div>
-
-    <ul class="nav-links">
-        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li><a asp-controller="Movies" asp-action="Index" class="active">Movies</a></li>
-        <li><a asp-controller="Genres" asp-action="Index">Genres</a></li>
-        <li><a asp-controller="Home" asp-action="About">About</a></li>
-        <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
-    </ul>
-
-    <div class="nav-actions">
-        <div class="notification">
-            <span class="bell">🔔</span>
-            <span class="badge">3</span>
+    <section class="form-shell">
+        <div class="form-heading">
+            <p class="eyebrow">Admin edit</p>
+            <h1>Edit Movie</h1>
+            <p>Update the title metadata, poster, and synopsis shown across CineScope.</p>
         </div>
 
-        <div class="profile">👤 Admin ▾</div>
-    </div>
-</nav>
-
-<main class="page">
-    <section class="card edit-card">
-        <div class="edit-breadcrumb">
-            <a asp-controller="Movies" asp-action="Details" asp-route-id="@Model.Id">← Back to Details</a>
-        </div>
-
-        <h1>Edit Movie</h1>
-        <p>Update the movie information below.</p>
-
-        <hr class="section-divider" />
-
-        <form asp-action="Edit" method="post" class="edit-form">
+        <form asp-action="Edit" method="post" class="cinema-form">
             @if (ViewData.ModelState.Values.Any(v => v.Errors.Count > 0))
             {
-                <div class="alert alert-danger" role="alert">
-                    <h4 class="alert-heading">Validation Error</h4>
-                    <ul class="error-list">
+                <div class="cinema-alert cinema-alert-danger" role="alert">
+                    <strong>Validation error</strong>
+                    <ul>
                         @foreach (var modelState in ViewData.ModelState.Values)
                         {
                             @foreach (var error in modelState.Errors)
@@ -57,55 +33,55 @@
 
             <input type="hidden" asp-for="Id" />
 
-            <div class="form-group">
-                <label asp-for="Title" class="form-label"></label>
-                <input type="text" asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
+            <div class="form-field">
+                <label asp-for="Title"></label>
+                <input type="text" asp-for="Title" />
+                <span asp-validation-for="Title" class="field-error"></span>
             </div>
 
             <div class="form-row">
-                <div class="form-group">
-                    <label asp-for="Genre" class="form-label"></label>
-                    <select asp-for="Genre" class="form-control">
+                <div class="form-field">
+                    <label asp-for="Genre"></label>
+                    <select asp-for="Genre">
                         <option value="">Select a Genre</option>
-                        <option value="Sci-Fi" selected="@(Model.Genre == "Sci-Fi")">Sci-Fi</option>
-                        <option value="Drama" selected="@(Model.Genre == "Drama")">Drama</option>
-                        <option value="Adventure" selected="@(Model.Genre == "Adventure")">Adventure</option>
-                        <option value="Comedy" selected="@(Model.Genre == "Comedy")">Comedy</option>
-                        <option value="Horror" selected="@(Model.Genre == "Horror")">Horror</option>
-                        <option value="Thriller" selected="@(Model.Genre == "Thriller")">Thriller</option>
-                        <option value="Action" selected="@(Model.Genre == "Action")">Action</option>
-                        <option value="Romance" selected="@(Model.Genre == "Romance")">Romance</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Adventure">Adventure</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Horror">Horror</option>
+                        <option value="Thriller">Thriller</option>
+                        <option value="Action">Action</option>
+                        <option value="Romance">Romance</option>
                     </select>
-                    <span asp-validation-for="Genre" class="text-danger"></span>
+                    <span asp-validation-for="Genre" class="field-error"></span>
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="ReleaseYear" class="form-label"></label>
-                    <input type="number" asp-for="ReleaseYear" class="form-control" min="1900" />
-                    <span asp-validation-for="ReleaseYear" class="text-danger"></span>
+                <div class="form-field">
+                    <label asp-for="ReleaseYear"></label>
+                    <input type="number" asp-for="ReleaseYear" min="1888" max="2100" />
+                    <span asp-validation-for="ReleaseYear" class="field-error"></span>
                 </div>
             </div>
 
             <div class="form-row">
-                <div class="form-group">
-                    <label asp-for="Rating" class="form-label"></label>
-                    <input type="number" asp-for="Rating" class="form-control" min="0" max="5" step="0.1" />
-                    <span asp-validation-for="Rating" class="text-danger"></span>
+                <div class="form-field">
+                    <label asp-for="Rating"></label>
+                    <input type="number" asp-for="Rating" min="0" max="10" step="0.1" />
+                    <span asp-validation-for="Rating" class="field-error"></span>
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="Duration" class="form-label"></label>
-                    <input type="number" asp-for="Duration" class="form-control" min="1" placeholder="Minutes" />
-                    <span asp-validation-for="Duration" class="text-danger"></span>
+                <div class="form-field">
+                    <label asp-for="Duration"></label>
+                    <input type="number" asp-for="Duration" min="1" placeholder="Minutes" />
+                    <span asp-validation-for="Duration" class="field-error"></span>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="PosterUrl" class="form-label"></label>
-                <input type="url" asp-for="PosterUrl" class="form-control" />
-                <span asp-validation-for="PosterUrl" class="text-danger"></span>
-                @if (!string.IsNullOrEmpty(Model.PosterUrl))
+            <div class="form-field">
+                <label asp-for="PosterUrl"></label>
+                <input type="url" asp-for="PosterUrl" />
+                <span asp-validation-for="PosterUrl" class="field-error"></span>
+                @if (!string.IsNullOrWhiteSpace(Model.PosterUrl) && Model.PosterUrl != "N/A")
                 {
                     <div class="poster-preview">
                         <img src="@Model.PosterUrl" alt="Poster preview" />
@@ -113,16 +89,20 @@
                 }
             </div>
 
-            <div class="form-group">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
+            <div class="form-field">
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" rows="5"></textarea>
+                <span asp-validation-for="Description" class="field-error"></span>
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn-primary">💾 Save Changes</button>
-                <a asp-action="Details" asp-route-id="@Model.Id" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-cinema btn-cinema-primary">Save Changes</button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn-cinema btn-cinema-secondary">Cancel</a>
             </div>
         </form>
     </section>
-</main>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

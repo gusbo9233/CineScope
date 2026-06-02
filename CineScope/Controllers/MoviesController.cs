@@ -174,8 +174,19 @@ namespace CineScope.Controllers
 
         // POST: Movies/ImportMovie
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ImportMovie(string imdbId)
         {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Redirect("/MicrosoftIdentity/Account/SignIn?returnUrl=%2FMovies%2FSearch");
+            }
+
+            if (!User.IsInRole("Admin"))
+            {
+                return RedirectToPage("/Account/AccessDenied");
+            }
+
             try
             {
                 var movie = await _movieService.FetchMovieFromApiAsync(imdbId);

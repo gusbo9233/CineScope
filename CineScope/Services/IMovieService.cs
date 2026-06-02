@@ -9,6 +9,7 @@ namespace CineScope.Services
         Task<MovieModel> CreateMovieAsync(MovieModel movie);
         Task<MovieModel> UpdateMovieAsync(MovieModel movie);
         Task DeleteMovieAsync(int id);
+        Task<int> DeleteMoviesAsync(IEnumerable<int> ids);
         bool MovieExists(int id);
         Task<MovieModel> FetchMovieFromApiAsync(string imdbId);
         Task<MovieModel> FetchAndCreateMovieFromApiAsync(string imdbId);

@@ -1,5 +1,6 @@
 using CineScope.Data;
 using CineScope.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
@@ -10,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Microsoft Identity Web authentication
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+builder.Services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+{
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
 
 // Add authorization policies for role-based access
 builder.Services.AddAuthorization(options =>

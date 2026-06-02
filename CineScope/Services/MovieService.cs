@@ -192,6 +192,24 @@ namespace CineScope.Services
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<int> DeleteMoviesAsync(IEnumerable<int> ids)
+        {
+            var idList = ids.Distinct().ToList();
+            if (idList.Count == 0)
+            {
+                return 0;
+            }
+
+            var movies = await _context.Movies
+                .Where(movie => idList.Contains(movie.Id))
+                .ToListAsync();
+
+            _context.Movies.RemoveRange(movies);
+            await _context.SaveChangesAsync();
+
+            return movies.Count;
+        }
         
         public bool MovieExists(int id)
         {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -7,50 +7,48 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/movies.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CineScope.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CineScope</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+    <header class="app-header">
+        <nav class="navbar navbar-expand-lg app-nav" aria-label="Primary navigation">
+            <div class="container-fluid app-nav-inner">
+                <a class="navbar-brand brand-mark" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="brand-play"></span>
+                    <span>Cine<span>Scope</span></span>
+                </a>
+                <button class="navbar-toggler app-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="mainNavigation">
+                    <ul class="navbar-nav app-links me-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Movies</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Movies" asp-action="Index">Movies</a>
+                            <a class="nav-link" asp-area="" asp-controller="Movies" asp-action="Index">Browse</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Movies" asp-action="Search">Search OMDB</a>
+                            <a class="nav-link" asp-area="" asp-controller="Movies" asp-action="Search">Search OMDb</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link admin-nav-link" asp-controller="Admin" asp-action="Dashboard">Admin Dashboard</a>
                         </li>
                     </ul>
-                    <form class="d-flex me-3" method="post" asp-controller="Movies" asp-action="SearchMovies" role="search">
-                        <input class="form-control me-2" type="search" name="searchQuery" placeholder="Search movies..." aria-label="Search" />
-                        <button class="btn btn-outline-primary" type="submit">Search</button>
+                    <form class="app-search" method="post" asp-controller="Movies" asp-action="SearchMovies" role="search">
+                        <input type="search" name="searchQuery" placeholder="Search titles" aria-label="Search movies" />
+                        <button type="submit">Search</button>
                     </form>
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav app-account">
                         @if (User?.Identity?.IsAuthenticated == true)
                         {
-                            @if (User.IsInRole("Admin"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-danger fw-bold" asp-page="/Admin/Dashboard">Admin</a>
-                                </li>
-                            }
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-person-circle"></i> @User.Identity.Name
+                                <a class="nav-link dropdown-toggle account-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    @User.Identity.Name
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <ul class="dropdown-menu dropdown-menu-end app-dropdown" aria-labelledby="userDropdown">
                                     <li><a class="dropdown-item" asp-page="/Account/Profile">Profile</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" asp-page="/Account/Signout">Sign Out</a></li>
@@ -60,7 +58,7 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Account/Login">Sign In</a>
+                                <a class="nav-link account-link" asp-page="/Account/Login">Sign In</a>
                             </li>
                         }
                     </ul>
@@ -68,15 +66,17 @@
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    <div class="app-shell">
+        <main role="main" class="app-main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - CineScope - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="app-footer">
+        <div class="container-fluid">
+            <span>&copy; 2026 CineScope</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

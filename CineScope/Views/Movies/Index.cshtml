@@ -1,118 +1,167 @@
-﻿@model List<CineScope.Models.MovieModel>
+@model List<CineScope.Models.MovieModel>
 
 @{
-    ViewData["Title"] = "Manage Movies";
+    ViewData["Title"] = "Movies";
+    var movies = Model ?? new List<CineScope.Models.MovieModel>();
+    var heroMovie = movies.OrderByDescending(movie => movie.Rating).FirstOrDefault();
+    var averageRating = movies.Count == 0 ? 0 : movies.Average(movie => (double)movie.Rating);
+    var totalRuntime = movies.Sum(movie => movie.Duration);
+    var genres = movies
+        .SelectMany(movie => (movie.Genre ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
+        .Select(genre => genre.Trim())
+        .Where(genre => !string.IsNullOrWhiteSpace(genre))
+        .Distinct()
+        .Take(6)
+        .ToList();
 }
 
-<link rel="stylesheet" href="~/css/movies.css" />
+<div class="cinema-page">
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="cinema-alert cinema-alert-success" role="alert">@successMessage</div>
+    }
 
-<nav class="navbar">
-    <div class="logo">Cine<span>Scope</span></div>
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="cinema-alert cinema-alert-danger" role="alert">@errorMessage</div>
+    }
 
-    <ul class="nav-links">
-        <li><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li><a asp-controller="Movies" asp-action="Index" class="active">Movies</a></li>
-        <li><a asp-controller="Genres" asp-action="Index">Genres</a></li>
-        <li><a asp-controller="Home" asp-action="About">About</a></li>
-        <li><a asp-controller="Home" asp-action="Contact">Contact</a></li>
-    </ul>
+    @if (TempData["InfoMessage"] is string infoMessage)
+    {
+        <div class="cinema-alert cinema-alert-info" role="alert">@infoMessage</div>
+    }
 
-    <div class="nav-actions">
-        <div class="notification">
-            <span class="bell">🔔</span>
-            <span class="badge">3</span>
-        </div>
-
-        <div class="profile">👤 Admin ▾</div>
-    </div>
-</nav>
-
-<main class="page">
-    <section class="card">
-        <div class="card-header">
-            <div>
-                <h1>Manage Movies</h1>
-                <p>View, search and manage all movies in the system.</p>
+    <section class="hero-banner" aria-label="CineScope movie dashboard">
+        <div class="hero-copy">
+            <p class="eyebrow">CineScope originals</p>
+            <h1>@(heroMovie?.Title ?? "Build your movie universe")</h1>
+            <p class="hero-description">
+                @(heroMovie?.Description ?? "Search OMDb, import films, and manage your collection from one cinematic workspace.")
+            </p>
+            <div class="hero-meta">
+                <span>@(heroMovie?.ReleaseYear.ToString() ?? "Curated")</span>
+                <span>@(heroMovie?.Genre ?? "Movie library")</span>
+                <span>@(heroMovie == null ? "Ready to import" : $"{heroMovie.Rating:0.0} rating")</span>
             </div>
-
-            <a asp-controller="Movies" asp-action="Create" class="add-btn">
-                + Add New Movie
-            </a>
-        </div>
-
-        <hr />
-
-        <div class="toolbar">
-            <div class="filters">
-                <form asp-controller="Movies" asp-action="Index" method="get" class="search-box">
-                    <span>🔍</span>
-                    <input type="text" name="search" placeholder="Search by title..." />
-                </form>
-
-                <select name="genre">
-                    <option value="">All Genres</option>
-                    <option value="Sci-Fi">Sci-Fi</option>
-                    <option value="Drama">Drama</option>
-                    <option value="Adventure">Adventure</option>
-                </select>
-            </div>
-
-            <div class="results">
-                <span>Showing @Model.Count of @Model.Count movies</span>
-                <button type="button" class="refresh-btn">⟳</button>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Title</th>
-                    <th>Genre</th>
-                    <th>Rating</th>
-                    <th>Release Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var movie in Model)
+            <div class="hero-actions">
+                @if (heroMovie != null)
                 {
-                    <tr>
-                        <td>@movie.Id</td>
-                        <td>
-                            <div class="movie">
-                                <img src="@movie.PosterUrl" alt="@movie.Title poster" />
-                                <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">@movie.Title</a>
-                            </div>
-                        </td>
-                        <td>@movie.Genre</td>
-                        <td><span class="star">★</span> @movie.Rating</td>
-                        <td>@movie.ReleaseYear</td>
-                        <td>
-                            <div class="actions">
-                                <a asp-controller="Movies" asp-action="Edit" asp-route-id="@movie.Id" class="edit">✎ Edit</a>
-                                <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="details">◉ Details</a>
-                                <a asp-controller="Movies" asp-action="Delete" asp-route-id="@movie.Id" class="delete">🗑 Delete</a>
-                            </div>
-                        </td>
-                    </tr>
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@heroMovie.Id" class="btn-cinema btn-cinema-primary">View Feature</a>
                 }
-            </tbody>
-        </table>
-
-        <div class="table-footer">
-            <p>Showing 1 to @Model.Count of @Model.Count entries</p>
-
-            <div class="pagination">
-                <button type="button">‹</button>
-                <button type="button" class="current">1</button>
-                <button type="button">›</button>
+                <a asp-controller="Movies" asp-action="Search" class="btn-cinema btn-cinema-secondary">Search OMDb</a>
+                @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Admin" asp-action="Dashboard" class="btn-cinema btn-cinema-ghost">Admin Panel</a>
+                }
             </div>
         </div>
 
-        <form asp-action="SeedPopularMovies" method="post" style="display: inline;">
-            <button type="submit" class="add-btn">📥 Load Top 10 Movies</button>
-        </form>
+        <div class="hero-art" aria-hidden="true">
+            @if (!string.IsNullOrWhiteSpace(heroMovie?.PosterUrl) && heroMovie.PosterUrl != "N/A")
+            {
+                <img src="@heroMovie.PosterUrl" alt="" />
+            }
+            else
+            {
+                <div class="poster-placeholder poster-placeholder-large">CineScope</div>
+            }
+        </div>
     </section>
-</main> 
+
+    <section class="metric-strip" aria-label="Collection overview">
+        <div class="metric-card">
+            <span>Total Movies</span>
+            <strong>@movies.Count</strong>
+            <small>In your library</small>
+        </div>
+        <div class="metric-card">
+            <span>Avg Rating</span>
+            <strong>@averageRating.ToString("0.0")</strong>
+            <small>Across all titles</small>
+        </div>
+        <div class="metric-card">
+            <span>Runtime</span>
+            <strong>@totalRuntime</strong>
+            <small>Total minutes</small>
+        </div>
+        <div class="metric-card">
+            <span>Genres</span>
+            <strong>@genres.Count</strong>
+            <small>Top categories</small>
+        </div>
+    </section>
+
+    <section class="cinema-toolbar" aria-label="Movie actions">
+        <div>
+            <p class="eyebrow">Browse</p>
+            <h2>Your Collection</h2>
+        </div>
+        <div class="toolbar-actions">
+            <a asp-controller="Movies" asp-action="Search" class="btn-cinema btn-cinema-secondary">Import Movie</a>
+            <form asp-action="SeedPopularMovies" method="post">
+                <button type="submit" class="btn-cinema btn-cinema-primary">Load Top 10</button>
+            </form>
+        </div>
+    </section>
+
+    @if (genres.Count > 0)
+    {
+        <div class="genre-row" aria-label="Available genres">
+            @foreach (var genre in genres)
+            {
+                <span>@genre</span>
+            }
+        </div>
+    }
+
+    @if (movies.Count == 0)
+    {
+        <section class="empty-state">
+            <p class="eyebrow">No titles yet</p>
+            <h2>Your screen is ready.</h2>
+            <p>Import a movie from OMDb or load a starter set of top-rated films.</p>
+            <div class="hero-actions">
+                <a asp-controller="Movies" asp-action="Search" class="btn-cinema btn-cinema-secondary">Search OMDb</a>
+                <form asp-action="SeedPopularMovies" method="post">
+                    <button type="submit" class="btn-cinema btn-cinema-primary">Load Top 10</button>
+                </form>
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="movie-grid" aria-label="Movie cards">
+            @foreach (var movie in movies)
+            {
+                <article class="movie-card">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="poster-link" aria-label="Open details for @movie.Title">
+                        @if (!string.IsNullOrWhiteSpace(movie.PosterUrl) && movie.PosterUrl != "N/A")
+                        {
+                            <img src="@movie.PosterUrl" alt="@movie.Title poster" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="poster-placeholder">@movie.Title</div>
+                        }
+                    </a>
+                    <div class="movie-card-body">
+                        <div class="movie-card-title">
+                            <h3>@movie.Title</h3>
+                            <span>@movie.Rating.ToString("0.0")</span>
+                        </div>
+                        <p>@movie.ReleaseYear | @movie.Duration min</p>
+                        <p class="movie-genre">@movie.Genre</p>
+                        <div class="movie-card-actions">
+                            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">Details</a>
+                            @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                            {
+                                <a asp-controller="Movies" asp-action="Edit" asp-route-id="@movie.Id">Edit</a>
+                                <a asp-controller="Movies" asp-action="Delete" asp-route-id="@movie.Id" class="danger-link">Delete</a>
+                            }
+                        </div>
+                    </div>
+                </article>
+            }
+        </section>
+    }
+</div>

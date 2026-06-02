@@ -1,53 +1,71 @@
 @model List<CineScope.Models.MovieModel>
 @{
     ViewData["Title"] = "Search Results";
+    var movies = Model ?? new List<CineScope.Models.MovieModel>();
 }
 
-<div class="container mt-4">
-    <h1>Search Results for "@ViewData["SearchQuery"]"</h1>
-    
-    <a href="@Url.Action("Search")" class="btn btn-secondary mb-3">← New Search</a>
+<div class="cinema-page">
+    <section class="cinema-toolbar search-results-header" aria-label="Search results">
+        <div>
+            <p class="eyebrow">OMDb results</p>
+            <h1>Results for "@ViewData["SearchQuery"]"</h1>
+        </div>
+        <a href="@Url.Action("Search")" class="btn-cinema btn-cinema-secondary">New Search</a>
+    </section>
 
-    @if (Model == null || Model.Count == 0)
+    @if (movies.Count == 0)
     {
-        <div class="alert alert-info">No movies found. Try a different search term.</div>
+        <section class="empty-state">
+            <p class="eyebrow">No matches</p>
+            <h2>Try a different title.</h2>
+            <p>OMDb did not return movies for this search term.</p>
+        </section>
     }
     else
     {
-        <div class="row">
-            @foreach (var movie in Model)
+        <section class="movie-grid movie-grid-wide" aria-label="Search result movie cards">
+            @foreach (var movie in movies)
             {
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100">
-                        @if (!string.IsNullOrEmpty(movie.PosterUrl) && movie.PosterUrl != "N/A")
+                <article class="movie-card result-card">
+                    <div class="poster-link">
+                        @if (!string.IsNullOrWhiteSpace(movie.PosterUrl) && movie.PosterUrl != "N/A")
                         {
-                            <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="height: 300px; object-fit: cover;" />
+                            <img src="@movie.PosterUrl" alt="@movie.Title poster" loading="lazy" />
                         }
                         else
                         {
-                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 300px;">
-                                <span class="text-white">No Image</span>
-                            </div>
+                            <div class="poster-placeholder">@movie.Title</div>
                         }
-                        <div class="card-body">
-                            <h5 class="card-title">@movie.Title</h5>
-                            <p class="card-text small">
-                                <strong>Year:</strong> @movie.ReleaseYear<br />
-                                <strong>Rating:</strong> @movie.Rating/10<br />
-                                <strong>Duration:</strong> @movie.Duration min<br />
-                                <strong>Genre:</strong> @movie.Genre
-                            </p>
-                            <p class="card-text" style="font-size: 0.9rem; max-height: 100px; overflow: hidden;">@movie.Description</p>
+                    </div>
+                    <div class="movie-card-body">
+                        <div class="movie-card-title">
+                            <h3>@movie.Title</h3>
+                            <span>@movie.Rating.ToString("0.0")</span>
                         </div>
-                        <div class="card-footer">
-                            <form method="post" action="@Url.Action("ImportMovie")" style="display: inline;">
-                                <input type="hidden" name="imdbId" value="@movie.ImdbId" />
-                                <button type="submit" class="btn btn-success btn-sm w-100">Import to DB</button>
-                            </form>
+                        <p>@movie.ReleaseYear | @movie.Duration min</p>
+                        <p class="movie-genre">@movie.Genre</p>
+                        <p class="movie-description">@(string.IsNullOrWhiteSpace(movie.Description) ? "No synopsis available." : movie.Description)</p>
+                        <div class="movie-card-actions">
+                            @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                            {
+                                <form method="post" action="@Url.Action("ImportMovie")">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="imdbId" value="@movie.ImdbId" />
+                                    <button type="submit">Import to DB</button>
+                                </form>
+                            }
+                            else if (User?.Identity?.IsAuthenticated == true)
+                            {
+                                <a asp-page="/Account/AccessDenied">Import requires admin</a>
+                            }
+                            else
+                            {
+                                <a href="/MicrosoftIdentity/Account/SignIn?returnUrl=%2FMovies%2FSearch">Sign in to import</a>
+                            }
                         </div>
                     </div>
-                </div>
+                </article>
             }
-        </div>
+        </section>
     }
 </div>

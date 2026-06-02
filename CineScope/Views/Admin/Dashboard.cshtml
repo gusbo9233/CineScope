@@ -1,0 +1,222 @@
+@model CineScope.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var topMovie = Model.Movies.OrderByDescending(movie => movie.Rating).FirstOrDefault();
+    var genreGroups = Model.Movies
+        .SelectMany(movie => (movie.Genre ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
+        .Select(genre => genre.Trim())
+        .Where(genre => !string.IsNullOrWhiteSpace(genre))
+        .GroupBy(genre => genre)
+        .OrderByDescending(group => group.Count())
+        .Take(5)
+        .ToList();
+    var maxGenreCount = genreGroups.Count == 0 ? 1 : genreGroups.Max(group => group.Count());
+}
+
+<div class="admin-dashboard">
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+        <div class="admin-sidebar-title">Admin Panel</div>
+        <a asp-controller="Admin" asp-action="Dashboard" class="active">Overview</a>
+        <a asp-controller="Movies" asp-action="Index">Movies</a>
+        <a asp-controller="Movies" asp-action="Search">Import</a>
+        <a asp-controller="Home" asp-action="Index">Platform</a>
+    </aside>
+
+    <div class="admin-content">
+        <section class="admin-hero">
+            <div>
+                <p class="eyebrow">Admin analytics</p>
+                <h1>CineScope Command Center</h1>
+                <p>Signed in as @User.Identity?.Name. Monitor the library and edit database rows without leaving the dashboard.</p>
+            </div>
+            <div class="admin-hero-actions">
+                <a asp-controller="Movies" asp-action="Index" class="btn-cinema btn-cinema-secondary">View Platform</a>
+                <a asp-controller="Movies" asp-action="Search" class="btn-cinema btn-cinema-primary">Import Movie</a>
+            </div>
+        </section>
+
+        @if (TempData["SuccessMessage"] is string successMessage)
+        {
+            <div class="cinema-alert cinema-alert-success" role="alert">@successMessage</div>
+        }
+
+        @if (TempData["ErrorMessage"] is string errorMessage)
+        {
+            <div class="cinema-alert cinema-alert-danger" role="alert">@errorMessage</div>
+        }
+
+        <section class="admin-stats" aria-label="Database summary">
+            <article class="admin-stat">
+                <span>Total Movies</span>
+                <strong>@Model.MovieCount</strong>
+                <small>Rows in database</small>
+            </article>
+            <article class="admin-stat">
+                <span>Avg Rating</span>
+                <strong>@Model.AverageRating.ToString("0.0")</strong>
+                <small>Across all titles</small>
+            </article>
+            <article class="admin-stat">
+                <span>Total Runtime</span>
+                <strong>@Model.TotalRuntime</strong>
+                <small>Minutes indexed</small>
+            </article>
+            <article class="admin-stat highlight">
+                <span>Top Rated</span>
+                <strong>@(topMovie?.Title ?? "No titles")</strong>
+                <small>@(topMovie == null ? "Import a movie" : $"{topMovie.Rating:0.0} rating")</small>
+            </article>
+        </section>
+
+        <section class="admin-analytics-grid" aria-label="Admin analytics">
+            <article class="admin-panel">
+                <div class="panel-heading">
+                    <h2>Library Health</h2>
+                    <span>Live database snapshot</span>
+                </div>
+                <div class="admin-health">
+                    <div>
+                        <span>Editable rows</span>
+                        <strong>@Model.MovieCount</strong>
+                    </div>
+                    <div>
+                        <span>Linked IMDb IDs</span>
+                        <strong>@Model.Movies.Count(movie => !string.IsNullOrWhiteSpace(movie.ImdbId))</strong>
+                    </div>
+                    <div>
+                        <span>Poster coverage</span>
+                        <strong>@Model.Movies.Count(movie => !string.IsNullOrWhiteSpace(movie.PosterUrl) && movie.PosterUrl != "N/A")</strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="admin-panel">
+                <div class="panel-heading">
+                    <h2>Top Genres</h2>
+                    <span>Current collection mix</span>
+                </div>
+                @if (genreGroups.Count == 0)
+                {
+                    <p class="admin-muted">No genres found yet.</p>
+                }
+                else
+                {
+                    <div class="genre-bars">
+                        @foreach (var genre in genreGroups)
+                        {
+                            var percent = Math.Max(12, genre.Count() * 100 / maxGenreCount);
+                            <div class="genre-bar">
+                                <div>
+                                    <span>@genre.Key</span>
+                                    <strong>@genre.Count()</strong>
+                                </div>
+                                <div class="bar-track">
+                                    <span style="width: @percent%"></span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </article>
+        </section>
+
+        <section class="admin-table-panel">
+            <div class="panel-heading table-heading">
+                <div>
+                    <h2>Movie Database</h2>
+                    <span>Edit metadata inline, select rows, and save individual changes.</span>
+                </div>
+                <form id="bulk-delete-form" asp-controller="Admin" asp-action="DeleteSelected" method="post">
+                    <button type="submit" class="btn-cinema btn-cinema-danger" onclick="return confirm('Delete the selected movies?');">Delete Selected</button>
+                </form>
+            </div>
+
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="admin-select">
+                                <input class="form-check-input" type="checkbox" id="select-all-movies" aria-label="Select all movies" />
+                            </th>
+                            <th scope="col">Id</th>
+                            <th scope="col">Movie Row</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Movies.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="3" class="admin-empty">No movie rows found.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var movie in Model.Movies)
+                            {
+                                <tr>
+                                    <td class="admin-select">
+                                        <input class="form-check-input movie-select" form="bulk-delete-form" type="checkbox" name="selectedMovieIds" value="@movie.Id" aria-label="Select @movie.Title" />
+                                    </td>
+                                    <td class="admin-id">@movie.Id</td>
+                                    <td>
+                                        <form method="post" asp-controller="Admin" asp-action="UpdateMovie" class="admin-row-form">
+                                            <input type="hidden" name="Id" value="@movie.Id" />
+                                            <div class="admin-edit-grid">
+                                                <label>
+                                                    <span>Title</span>
+                                                    <input name="Title" value="@movie.Title" aria-label="Title for @movie.Title" />
+                                                </label>
+                                                <label>
+                                                    <span>Genre</span>
+                                                    <input name="Genre" value="@movie.Genre" aria-label="Genre for @movie.Title" />
+                                                </label>
+                                                <label>
+                                                    <span>Year</span>
+                                                    <input name="ReleaseYear" value="@movie.ReleaseYear" type="number" min="1888" max="2100" aria-label="Release year for @movie.Title" />
+                                                </label>
+                                                <label>
+                                                    <span>Rating</span>
+                                                    <input name="Rating" value="@movie.Rating" type="number" min="0" max="10" step="0.1" aria-label="Rating for @movie.Title" />
+                                                </label>
+                                                <label>
+                                                    <span>Minutes</span>
+                                                    <input name="Duration" value="@movie.Duration" type="number" min="0" aria-label="Duration for @movie.Title" />
+                                                </label>
+                                                <label>
+                                                    <span>IMDb</span>
+                                                    <input name="ImdbId" value="@movie.ImdbId" aria-label="IMDb id for @movie.Title" />
+                                                </label>
+                                                <label class="admin-url-field">
+                                                    <span>Poster URL</span>
+                                                    <input name="PosterUrl" value="@movie.PosterUrl" type="url" aria-label="Poster URL for @movie.Title" />
+                                                </label>
+                                                <label class="admin-description-field">
+                                                    <span>Description</span>
+                                                    <textarea name="Description" aria-label="Description for @movie.Title">@movie.Description</textarea>
+                                                </label>
+                                                <div class="admin-row-actions">
+                                                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">Details</a>
+                                                    <button type="submit">Save</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('select-all-movies')?.addEventListener('change', function (event) {
+            document.querySelectorAll('.movie-select').forEach(function (checkbox) {
+                checkbox.checked = event.target.checked;
+            });
+        });
+    </script>
+}
