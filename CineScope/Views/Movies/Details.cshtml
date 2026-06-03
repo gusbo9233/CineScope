@@ -2,8 +2,11 @@
 
 @{
     ViewData["Title"] = $"{Model.Title} - Movie Details";
-    var ratingScale = Model.Rating > 5m ? 10m : 5m;
-    var ratingPercent = Math.Clamp((double)(Model.Rating / ratingScale) * 100, 0, 100);
+
+    var averageRating = ViewData["AverageRating"] as decimal? ?? Model.Rating;
+    var userRating = ViewData["UserRating"] as int?;
+    var ratingScale = averageRating > 5m ? 10m : 5m;
+    var ratingPercent = Math.Clamp((double)(averageRating / ratingScale) * 100, 0, 100);
 }
 
 <div class="cinema-page compact-page">
@@ -33,12 +36,39 @@
             <div class="rating-panel" aria-label="Movie rating">
                 <div>
                     <span>Audience score</span>
-                    <strong>@Model.Rating.ToString("0.0") / @ratingScale.ToString("0")</strong>
+                    <strong>@averageRating.ToString("0.0") / @ratingScale.ToString("0")</strong>
                 </div>
                 <div class="progress-track">
                     <div class="progress-fill" style="width: @ratingPercent%"></div>
                 </div>
             </div>
+
+            @if (User?.Identity?.IsAuthenticated == true)
+            {
+                <div class="user-rating">
+                    <form asp-action="Rate" method="post" class="rating-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div>
+                            <label>Your rating:</label>
+                            <div class="star-options">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <label>
+                                        <input type="radio" name="stars" value="@i" @(userRating.HasValue && userRating.Value == i ? "checked" : "") />
+                                        @i ★
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-cinema btn-cinema-primary">Save Rating</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <p class="small text-muted">Sign in to rate this movie.</p>
+            }
 
             <p class="details-description">@(string.IsNullOrWhiteSpace(Model.Description) ? "No synopsis available." : Model.Description)</p>
 

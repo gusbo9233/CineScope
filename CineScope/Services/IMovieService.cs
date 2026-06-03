@@ -14,8 +14,14 @@ namespace CineScope.Services
         Task<MovieModel> FetchMovieFromApiAsync(string imdbId);
         Task<MovieModel> FetchAndCreateMovieFromApiAsync(string imdbId);
         Task<List<MovieModel>> FetchAndCreatePopularMoviesAsync();
-
         Task<List<MovieModel>> SearchMoviesFromApiAsync(string searchQuery);
 
+        // Rating APIs
+        Task AddOrUpdateRatingAsync(int movieId, string userId, int stars);
+        Task<decimal> GetAverageRatingAsync(int movieId);
+        Task<int?> GetUserRatingAsync(int movieId, string userId);
+
+        Task<List<MovieComment>> GetCommentsAsync(int movieId);
+        Task AddCommentAsync(int movieId, string userId, string userName, string content);
     }
 }

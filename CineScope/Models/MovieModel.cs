@@ -11,5 +11,6 @@
         public string PosterUrl { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string ImdbId { get; set; } = string.Empty;
+        public List<MovieComment> Comments { get; set; } = new();
     }
 }

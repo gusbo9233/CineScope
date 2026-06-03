@@ -3,6 +3,8 @@ using CineScope.Models;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+
 namespace CineScope.Services
 {
     public class MovieService : IMovieService
@@ -42,7 +44,7 @@ namespace CineScope.Services
                 {
                     var movie = await FetchMovieFromApiAsync(imdbId);
                     var existingMovie = await _context.Movies.FirstOrDefaultAsync(m => m.Title == movie.Title);
-                    
+
                     if (existingMovie == null)
                     {
                         await CreateMovieAsync(movie);
@@ -129,7 +131,7 @@ namespace CineScope.Services
             {
                 throw new Exception($"Error fetching movie from API: {ex.Message}");
             }
-        }   
+        }
 
         public async Task<MovieModel> FetchAndCreateMovieFromApiAsync(string imdbId)
         {
@@ -185,9 +187,11 @@ namespace CineScope.Services
             return movie;
         }
 
-        public async Task DeleteMovieAsync(int id) {
+        public async Task DeleteMovieAsync(int id)
+        {
             var movie = await GetMovieByIdAsync(id);
-            if (movie != null) {
+            if (movie != null)
+            {
                 _context.Movies.Remove(movie);
                 await _context.SaveChangesAsync();
             }
@@ -210,11 +214,73 @@ namespace CineScope.Services
 
             return movies.Count;
         }
-        
+
         public bool MovieExists(int id)
         {
             return _context.Movies.Any(m => m.Id == id);
         }
 
+
+
+        public async Task AddOrUpdateRatingAsync(int movieId, string userId, int stars)
+        {
+            if (stars < 1 || stars > 5)
+                throw new ArgumentOutOfRangeException(nameof(stars), "Stars must be between 1 and 5.");
+
+            var existing = await _context.Ratings.FindAsync(movieId, userId);
+            if (existing == null)
+            {
+                existing = new MovieRating
+                {
+                    MovieId = movieId,
+                    UserId = userId,
+                    Stars = stars,
+                    RatedAt = DateTime.UtcNow
+                };
+                _context.Ratings.Add(existing);
+            }
+            else
+            {
+                existing.Stars = stars;
+                existing.RatedAt = DateTime.UtcNow;
+                _context.Ratings.Update(existing);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // update movie's stored Rating (average) to reflect current average
+            var movie = await GetMovieByIdAsync(movieId);
+            if (movie != null)
+            {
+                movie.Rating = await GetAverageRatingAsync(movieId);
+                _context.Movies.Update(movie);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<decimal> GetAverageRatingAsync(int movieId)
+        {
+            var ratings = await _context.Ratings
+                .Where(r => r.MovieId == movieId)
+                .Select(r => (decimal)r.Stars)
+                .ToListAsync();
+
+            if (ratings == null || ratings.Count == 0)
+                return 0m;
+
+            var avg = ratings.Average();
+            return Math.Round(avg, 1);
+        }
+
+        public async Task<int?> GetUserRatingAsync(int movieId, string userId)
+        {
+            var r = await _context.Ratings.FindAsync(movieId, userId);
+            return r?.Stars;
+        }
+
+        public async Task<List<MovieComment>> GetCommentAsync(int movieId, string userId, string userName, string content)
+        {
+
+        }
     }
 }

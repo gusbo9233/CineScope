@@ -10,6 +10,7 @@ using CineScope.Models;
 using CineScope.Services;
 using Microsoft.Identity.Client;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Security.Claims;
 
 namespace CineScope.Controllers
 {
@@ -19,7 +20,6 @@ namespace CineScope.Controllers
 
         public MoviesController(IMovieService movieService)
         {
-
             _movieService = movieService;
         }
 
@@ -60,7 +60,52 @@ namespace CineScope.Controllers
                 return NotFound();
             }
 
+            // compute average + user rating for the view
+            var avg = await _movieService.GetAverageRatingAsync(movie.Id);
+            int? userRating = null;
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    userRating = await _movieService.GetUserRatingAsync(movie.Id, userId);
+                }
+            }
+
+            ViewData["AverageRating"] = avg;
+            ViewData["UserRating"] = userRating;
+
             return View(movie);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Rate(int id, int stars)
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                // send user to sign-in (app uses Microsoft Identity sign-in path elsewhere)
+                return Redirect($"/MicrosoftIdentity/Account/SignIn?returnUrl=/Movies/Details/{id}");
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["ErrorMessage"] = "Unable to determine your user id.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            try
+            {
+                await _movieService.AddOrUpdateRatingAsync(id, userId, stars);
+                TempData["SuccessMessage"] = "Your rating has been saved.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Could not save rating: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         // GET: Movies/Edit/5
