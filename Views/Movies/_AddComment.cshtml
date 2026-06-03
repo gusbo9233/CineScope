@@ -1,0 +1,20 @@
+@model int
+
+<div class="add-comment mt-4">
+    @if (User?.Identity?.IsAuthenticated == true)
+    {
+        <form asp-controller="Movies" asp-action="AddComment" method="post" class="comment-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="movieId" value="@Model" />
+            <div class="mb-2">
+                <label for="content" class="form-label">Add a comment</label>
+                <textarea name="content" id="content" class="form-control" rows="4" maxlength="1000" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Post Comment</button>
+        </form>
+    }
+    else
+    {
+        <p class="small text-muted">Sign in to post a comment.</p>
+    }
+</div>

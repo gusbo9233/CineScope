@@ -1,0 +1,24 @@
+@model IEnumerable<CineScope.Models.MovieComment>
+
+@if (Model != null && Model.Any())
+{
+    <ul class="comment-list">
+        @foreach (var c in Model)
+        {
+            <li class="comment-item">
+                <div class="comment-meta">
+                    <strong>@c.UserName</strong>
+                    <span class="text-muted"> — @c.CreatedAt.ToLocalTime().ToString("g")</span>
+                </div>
+                <div class="comment-body">
+                    @Html.Raw(System.Net.WebUtility.HtmlEncode(c.Content).Replace("\n", "<br/>"))
+                </div>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p class="text-muted">No comments yet. Be the first to comment.</p>
+}
+        

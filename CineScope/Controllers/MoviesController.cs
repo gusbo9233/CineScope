@@ -72,6 +72,10 @@ namespace CineScope.Controllers
                 }
             }
 
+            // Load comments and attach to the model so the view can render them
+            var comments = await _movieService.GetCommentsAsync(movie.Id);
+            movie.Comments = comments ?? new List<CineScope.Models.MovieComment>();
+
             ViewData["AverageRating"] = avg;
             ViewData["UserRating"] = userRating;
 
@@ -252,6 +256,57 @@ namespace CineScope.Controllers
                 TempData["ErrorMessage"] = $"Import failed: {ex.Message}";
                 return RedirectToAction(nameof(Search));
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Comments(int id)
+        {
+            var comments = await _movieService.GetCommentsAsync(id);
+            return PartialView("_Comments", comments);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddComment(int movieId, string content)
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Redirect($"/MicrosoftIdentity/Account/SignIn?returnUrl=/Movies/Details/{movieId}");
+            }
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                TempData["ErrorMessage"] = "Comment content cannot be empty";
+                return RedirectToAction(nameof(Details), new { id = movieId });
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userName = User.Identity?.Name ?? User.FindFirst(ClaimTypes.Name)?.Value ?? "Anonymous";
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["ErrorMessage"] = "Unable to determine your user id.";
+                return RedirectToAction(nameof(Details), new { id = movieId });
+            }
+
+            try
+            {
+                await _movieService.AddCommentAsync(movieId, userId, userName, content);
+                TempData["SuccessMessage"] = "Your comment has been posted.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Could not save comment: {ex.Message}";
+            }
+
+            // If AJAX request, return updated comments partial to avoid full page reload
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                var comments = await _movieService.GetCommentsAsync(movieId);
+                return PartialView("_Comments", comments);
+            }
+
+            return RedirectToAction(nameof(Details), new { id = movieId });
         }
 
     }

@@ -102,82 +102,13 @@
         </article>
     </section>
 
-    <section class="comments-section" aria-label="Comments">
+    <section class="comments-section container mt-5">
         <h2>Comments</h2>
 
-        <div id="comments-container">
-            @Html.Partial("_Comments", Model.Comments)
-        </div>
+        @* Render comments partial. If controller populates Model.Comments, it will be shown; otherwise pass an empty list. *@
+        @await Html.PartialAsync("_Comments", Model.Comments ?? new List<CineScope.Models.MovieComment>())
 
-        <div class="comment-form mt-3">
-            @if (User?.Identity?.IsAuthenticated == true)
-            {
-                <form id="comment-form" asp-action="AddComment" method="post" class="needs-validation">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="movieId" value="@Model.Id" />
-                    <div class="mb-2">
-                        <label for="content" class="form-label">Add a comment</label>
-                        <textarea id="content" name="content" class="form-control" rows="4" required></textarea>
-                    </div>
-                    <button type="submit" class="btn-cinema btn-cinema-primary">Post Comment</button>
-                </form>
-            }
-            else
-            {
-                <p class="small text-muted">
-                    <a href="/MicrosoftIdentity/Account/SignIn?returnUrl=/Movies/Details/@Model.Id">Sign in</a> to post a comment.
-                </p>
-            }
-        </div>
+        @* Render add-comment form partial (posts to Movies/AddComment). *@
+        @await Html.PartialAsync("_AddComment", Model.Id)
     </section>
 </div>
-
-@section Scripts {
-    <script>
-        (function () {
-            const form = document.getElementById('comment-form');
-            if (!form) return;
-
-            form.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const submitBtn = form.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-
-                const formData = new FormData(form);
-
-                try {
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        credentials: 'same-origin'
-                    });
-
-                    if (!response.ok) {
-                        // fallback to full submit if something went wrong
-                        form.submit();
-                        return;
-                    }
-
-                    const html = await response.text();
-                    const container = document.getElementById('comments-container');
-                    if (container) {
-                        container.innerHTML = html;
-                    }
-
-                    // clear textarea
-                    const textarea = form.querySelector('textarea[name="content"]');
-                    if (textarea) textarea.value = '';
-
-                } catch (err) {
-                    // fallback to full submit
-                    form.submit();
-                } finally {
-                    submitBtn.disabled = false;
-                }
-            });
-        })();
-    </script>
-}

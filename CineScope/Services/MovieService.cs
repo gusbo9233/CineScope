@@ -278,9 +278,34 @@ namespace CineScope.Services
             return r?.Stars;
         }
 
-        public async Task<List<MovieComment>> GetCommentAsync(int movieId, string userId, string userName, string content)
+        public async Task<List<MovieComment>> GetCommentsAsync(int movieId)
         {
+            return await _context.Comments
+                .Where(c => c.MovieId == movieId)
+                .OrderBy(c => c.CreatedAt)
+                .ToListAsync();
+        }
 
+        public async Task AddCommentAsync(int movieId, string userId, string userName, string content)
+        {
+            var movie = await _context.Movies.FindAsync(movieId);
+
+            if (movie == null)
+            {
+                throw new ArgumentException("Movie not found", nameof(movieId));
+            }
+
+            var movieComment = new MovieComment
+            {
+                MovieId = movieId,
+                UserId = userId ?? string.Empty,
+                UserName = userName ?? string.Empty,
+                Content = content ?? string.Empty,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Comments.Add(movieComment);
+            await _context.SaveChangesAsync();
         }
     }
 }
