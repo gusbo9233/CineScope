@@ -132,7 +132,7 @@
             </div>
 
             <div class="admin-table-wrap">
-                <table class="admin-table">
+                <table class="admin-table table align-middle">
                     <thead>
                         <tr>
                             <th scope="col" class="admin-select">
@@ -164,35 +164,35 @@
                                             <div class="admin-edit-grid">
                                                 <label>
                                                     <span>Title</span>
-                                                    <input name="Title" value="@movie.Title" aria-label="Title for @movie.Title" />
+                                                    <input name="Title" value="@movie.Title" class="form-control" aria-label="Title for @movie.Title" />
                                                 </label>
                                                 <label>
                                                     <span>Genre</span>
-                                                    <input name="Genre" value="@movie.Genre" aria-label="Genre for @movie.Title" />
+                                                    <input name="Genre" value="@movie.Genre" class="form-control" aria-label="Genre for @movie.Title" />
                                                 </label>
                                                 <label>
                                                     <span>Year</span>
-                                                    <input name="ReleaseYear" value="@movie.ReleaseYear" type="number" min="1888" max="2100" aria-label="Release year for @movie.Title" />
+                                                    <input name="ReleaseYear" value="@movie.ReleaseYear" class="form-control" type="number" min="1888" max="2100" aria-label="Release year for @movie.Title" />
                                                 </label>
                                                 <label>
                                                     <span>Rating</span>
-                                                    <input name="Rating" value="@movie.Rating" type="number" min="0" max="10" step="0.1" aria-label="Rating for @movie.Title" />
+                                                    <input name="Rating" value="@movie.Rating" class="form-control" type="number" min="0" max="10" step="0.1" aria-label="Rating for @movie.Title" />
                                                 </label>
                                                 <label>
                                                     <span>Minutes</span>
-                                                    <input name="Duration" value="@movie.Duration" type="number" min="0" aria-label="Duration for @movie.Title" />
+                                                    <input name="Duration" value="@movie.Duration" class="form-control" type="number" min="0" aria-label="Duration for @movie.Title" />
                                                 </label>
                                                 <label>
                                                     <span>IMDb</span>
-                                                    <input name="ImdbId" value="@movie.ImdbId" aria-label="IMDb id for @movie.Title" />
+                                                    <input name="ImdbId" value="@movie.ImdbId" class="form-control" aria-label="IMDb id for @movie.Title" />
                                                 </label>
                                                 <label class="admin-url-field">
                                                     <span>Poster URL</span>
-                                                    <input name="PosterUrl" value="@movie.PosterUrl" type="url" aria-label="Poster URL for @movie.Title" />
+                                                    <input name="PosterUrl" value="@movie.PosterUrl" class="form-control" type="url" aria-label="Poster URL for @movie.Title" />
                                                 </label>
                                                 <label class="admin-description-field">
                                                     <span>Description</span>
-                                                    <textarea name="Description" aria-label="Description for @movie.Title">@movie.Description</textarea>
+                                                    <textarea name="Description" class="form-control" aria-label="Description for @movie.Title">@movie.Description</textarea>
                                                 </label>
                                                 <div class="admin-row-actions">
                                                     <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">Details</a>

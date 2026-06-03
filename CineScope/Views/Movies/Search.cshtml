@@ -9,8 +9,8 @@
         <p>Search by movie title, review the results, and import the best match into CineScope.</p>
 
         <form method="post" action="@Url.Action("SearchMovies")" class="spotlight-search">
-            <input type="text" name="searchQuery" placeholder="Search for movies..." required />
-            <button type="submit">Search</button>
+            <input type="text" name="searchQuery" class="form-control" placeholder="Search for movies..." required />
+            <button type="submit" class="btn btn-primary">Search</button>
         </form>
 
         @if (ViewData.ModelState.Values.SelectMany(v => v.Errors).Any())

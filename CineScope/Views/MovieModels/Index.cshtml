@@ -4,12 +4,17 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<div class="container py-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h2 mb-1">Movie Records</h1>
+            <p class="text-muted mb-0">Manage movies with the Bootstrap table view.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">Create New</a>
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
+<div class="table-responsive">
+<table class="table table-dark table-striped table-hover align-middle">
     <thead>
         <tr>
             <th>
@@ -60,12 +65,14 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Description)
             </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            <td class="text-nowrap">
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light">Edit</a>
+                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Details</a>
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
             </td>
         </tr>
 }
     </tbody>
 </table>
+</div>
+</div>

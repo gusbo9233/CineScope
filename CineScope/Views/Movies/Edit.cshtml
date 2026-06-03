@@ -35,14 +35,14 @@
 
             <div class="form-field">
                 <label asp-for="Title"></label>
-                <input type="text" asp-for="Title" />
+                <input type="text" asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="field-error"></span>
             </div>
 
             <div class="form-row">
                 <div class="form-field">
                     <label asp-for="Genre"></label>
-                    <select asp-for="Genre">
+                    <select asp-for="Genre" class="form-select">
                         <option value="">Select a Genre</option>
                         <option value="Sci-Fi">Sci-Fi</option>
                         <option value="Drama">Drama</option>
@@ -58,7 +58,7 @@
 
                 <div class="form-field">
                     <label asp-for="ReleaseYear"></label>
-                    <input type="number" asp-for="ReleaseYear" min="1888" max="2100" />
+                    <input type="number" asp-for="ReleaseYear" class="form-control" min="1888" max="2100" />
                     <span asp-validation-for="ReleaseYear" class="field-error"></span>
                 </div>
             </div>
@@ -66,20 +66,20 @@
             <div class="form-row">
                 <div class="form-field">
                     <label asp-for="Rating"></label>
-                    <input type="number" asp-for="Rating" min="0" max="10" step="0.1" />
+                    <input type="number" asp-for="Rating" class="form-control" min="0" max="10" step="0.1" />
                     <span asp-validation-for="Rating" class="field-error"></span>
                 </div>
 
                 <div class="form-field">
                     <label asp-for="Duration"></label>
-                    <input type="number" asp-for="Duration" min="1" placeholder="Minutes" />
+                    <input type="number" asp-for="Duration" class="form-control" min="1" placeholder="Minutes" />
                     <span asp-validation-for="Duration" class="field-error"></span>
                 </div>
             </div>
 
             <div class="form-field">
                 <label asp-for="PosterUrl"></label>
-                <input type="url" asp-for="PosterUrl" />
+                <input type="url" asp-for="PosterUrl" class="form-control" />
                 <span asp-validation-for="PosterUrl" class="field-error"></span>
                 @if (!string.IsNullOrWhiteSpace(Model.PosterUrl) && Model.PosterUrl != "N/A")
                 {
@@ -91,7 +91,7 @@
 
             <div class="form-field">
                 <label asp-for="Description"></label>
-                <textarea asp-for="Description" rows="5"></textarea>
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
                 <span asp-validation-for="Description" class="field-error"></span>
             </div>
 
