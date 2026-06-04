@@ -13,6 +13,7 @@ namespace CineScope.Data
         public DbSet<MovieModel> Movies { get; set; }
         public DbSet<MovieRating> Ratings { get; set; }
         public DbSet<MovieComment> Comments { get; set; }
+        public DbSet<FavoriteMovie> Favorites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,6 +40,15 @@ namespace CineScope.Data
                 .HasOne<MovieModel>()
                 .WithMany(m => m.Comments)
                 .HasForeignKey(c => c.MovieId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FavoriteMovie>()
+                .HasKey(f => new { f.MovieId, f.UserId });
+
+            modelBuilder.Entity<FavoriteMovie>()
+                .HasOne<MovieModel>()
+                .WithMany()
+                .HasForeignKey(f => f.MovieId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

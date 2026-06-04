@@ -3,10 +3,21 @@
 @{
     ViewData["Title"] = $"{Model.Title} - Movie Details";
 
-    var averageRating = ViewData["AverageRating"] as decimal? ?? Model.Rating;
+    var averageRatingView = ViewData["AverageRating"] as decimal?;
+    var ratingCount = ViewData["RatingCount"] as int? ?? 0;
     var userRating = ViewData["UserRating"] as int?;
-    var ratingScale = averageRating > 5m ? 10m : 5m;
-    var ratingPercent = Math.Clamp((double)(averageRating / ratingScale) * 100, 0, 100);
+    var isFavorite = ViewData["IsFavorite"] as bool? ?? false;
+
+    // effectiveRating is null when there is no meaningful average (unrated).
+    // Prefer the server-provided average when present; otherwise only fall back to the stored Model.Rating
+    // if there are ratings recorded and the stored rating is non-zero.
+    var effectiveRating = averageRatingView.HasValue
+        ? averageRatingView
+        : (ratingCount > 0 && Model.Rating > 0 ? (decimal?)Model.Rating : null);
+    var ratingScale = (effectiveRating.HasValue && effectiveRating.Value > 5m) ? 10m : 5m;
+    var ratingPercent = (!effectiveRating.HasValue || ratingCount == 0)
+        ? 0
+        : Math.Clamp((double)(effectiveRating.Value / ratingScale) * 100, 0, 100);
 }
 
 <div class="cinema-page compact-page">
@@ -36,7 +47,14 @@
             <div class="rating-panel" aria-label="Movie rating">
                 <div>
                     <span>Audience score</span>
-                    <strong>@averageRating.ToString("0.0") / @ratingScale.ToString("0")</strong>
+                    @if (ratingCount == 0 || !effectiveRating.HasValue)
+                    {
+                        <strong>Unrated</strong>
+                    }
+                    else
+                    {
+                        <strong>@effectiveRating.Value.ToString("0.0") / @ratingScale.ToString("0")</strong>
+                    }
                 </div>
                 <div class="progress-track">
                     <div class="progress-fill" style="width: @ratingPercent%"></div>
@@ -79,6 +97,19 @@
                     <a asp-controller="Movies" asp-action="Delete" asp-route-id="@Model.Id" class="btn-cinema btn-cinema-danger">Delete Movie</a>
                 }
                 <a asp-controller="Movies" asp-action="Index" class="btn-cinema btn-cinema-secondary">Back to Library</a>
+
+                @* Favorite heart button for signed-in members *@
+                @if (User?.Identity?.IsAuthenticated == true)
+                {
+                    <form id="favorite-form" asp-controller="Movies" asp-action="ToggleFavorite" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" id="favorite-btn" class="btn-cinema btn-favorite" aria-pressed="@(isFavorite.ToString().ToLower())" title="Add to favorites">
+                            <span id="favorite-icon" class="@(isFavorite ? "heart-filled" : "heart-outline")">❤</span>
+                            <span id="favorite-text">@((isFavorite) ? "Favorited" : "Add to favorites")</span>
+                        </button>
+                    </form>
+                }
             </div>
         </div>
     </section>
@@ -135,49 +166,103 @@
 @section Scripts {
     <script>
         (function () {
-            const form = document.getElementById('comment-form');
-            if (!form) return;
+            // Comment form AJAX (existing)
+            const commentForm = document.getElementById('comment-form');
+            if (commentForm) {
+                commentForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const submitBtn = commentForm.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
 
-            form.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const submitBtn = form.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
+                    const formData = new FormData(commentForm);
 
-                const formData = new FormData(form);
+                    try {
+                        const response = await fetch(commentForm.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            credentials: 'same-origin'
+                        });
 
-                try {
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        credentials: 'same-origin'
-                    });
+                        if (!response.ok) {
+                            commentForm.submit();
+                            return;
+                        }
 
-                    if (!response.ok) {
-                        // fallback to full submit if something went wrong
-                        form.submit();
-                        return;
+                        const html = await response.text();
+                        const container = document.getElementById('comments-container');
+                        if (container) {
+                            container.innerHTML = html;
+                        }
+
+                        const textarea = commentForm.querySelector('textarea[name="content"]');
+                        if (textarea) textarea.value = '';
+
+                    } catch (err) {
+                        commentForm.submit();
+                    } finally {
+                        submitBtn.disabled = false;
                     }
+                });
+            }
 
-                    const html = await response.text();
-                    const container = document.getElementById('comments-container');
-                    if (container) {
-                        container.innerHTML = html;
+            // Favorite toggle AJAX
+            const favForm = document.getElementById('favorite-form');
+            if (favForm) {
+                favForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    const btn = document.getElementById('favorite-btn');
+                    if (!btn) return;
+                    btn.disabled = true;
+
+                    const formData = new FormData(favForm);
+                    const tokenInput = favForm.querySelector('input[name="__RequestVerificationToken"]');
+                    const token = tokenInput ? tokenInput.value : null;
+
+                    try {
+                        const response = await fetch(favForm.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'RequestVerificationToken': token
+                            },
+                            credentials: 'same-origin'
+                        });
+
+                        if (!response.ok) {
+                            // if unauthorized, redirect to sign-in
+                            if (response.status === 401) {
+                                window.location.href = "/MicrosoftIdentity/Account/SignIn?returnUrl=" + encodeURIComponent(window.location.pathname);
+                                return;
+                            }
+                            // fallback to full submit if something went wrong
+                            favForm.submit();
+                            return;
+                        }
+
+                        const json = await response.json();
+                        const favorited = json.favorited === true;
+
+                        const icon = document.getElementById('favorite-icon');
+                        const text = document.getElementById('favorite-text');
+
+                        if (icon) {
+                            icon.className = favorited ? 'heart-filled' : 'heart-outline';
+                        }
+                        if (text) {
+                            text.textContent = favorited ? 'Favorited' : 'Add to favorites';
+                        }
+                        btn.setAttribute('aria-pressed', favorited.toString());
+                    } catch (err) {
+                        favForm.submit();
+                    } finally {
+                        btn.disabled = false;
                     }
-
-                    // clear textarea
-                    const textarea = form.querySelector('textarea[name="content"]');
-                    if (textarea) textarea.value = '';
-
-                } catch (err) {
-                    // fallback to full submit
-                    form.submit();
-                } finally {
-                    submitBtn.disabled = false;
-                }
-            });
+                });
+            }
         })();
     </script>
 }

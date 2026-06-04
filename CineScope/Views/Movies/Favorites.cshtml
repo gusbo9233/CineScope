@@ -1,0 +1,90 @@
+﻿@model List<CineScope.Models.MovieModel>
+
+@{
+    ViewData["Title"] = "My Favorites";
+    var movies = Model ?? new List<CineScope.Models.MovieModel>();
+}
+
+<div class="cinema-page">
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="cinema-alert cinema-alert-success" role="alert">@successMessage</div>
+    }
+
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="cinema-alert cinema-alert-danger" role="alert">@errorMessage</div>
+    }
+
+    <section class="cinema-toolbar" aria-label="Favorites">
+        <div>
+            <p class="eyebrow">Collection</p>
+            <h2>My Favorites</h2>
+        </div>
+        <div class="toolbar-actions">
+            <a asp-controller="Movies" asp-action="Search" class="btn-cinema btn-cinema-secondary">Import Movie</a>
+        </div>
+    </section>
+
+    @if (movies.Count == 0)
+    {
+        <section class="empty-state">
+            <p class="eyebrow">No favorites yet</p>
+            <h2>Your favorites list is empty.</h2>
+            <p>Search OMDb to add movies to your favorites.</p>
+            <div class="hero-actions">
+                <a asp-controller="Movies" asp-action="Search" class="btn-cinema btn-cinema-secondary">Search OMDb</a>
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="movie-grid" aria-label="Favorite movie cards">
+            @foreach (var movie in movies)
+            {
+                <article class="movie-card">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="poster-link" aria-label="Open details for @movie.Title">
+                        @if (!string.IsNullOrWhiteSpace(movie.PosterUrl) && movie.PosterUrl != "N/A")
+                        {
+                            <img src="@movie.PosterUrl" alt="@movie.Title poster" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="poster-placeholder">@movie.Title</div>
+                        }
+                    </a>
+                    <div class="movie-card-body">
+                        <div class="movie-card-title">
+                            <h3>@movie.Title</h3>
+                            <span>
+                                @if (movie.Rating == 0)
+                                {
+                                    @("Unrated")
+                                }
+                                else
+                                {
+                                    @(movie.Rating.ToString("0.0"))
+                                }
+                            </span>
+                        </div>
+                        <p>@movie.ReleaseYear | @movie.Duration min</p>
+                        <p class="movie-genre">@movie.Genre</p>
+                        <div class="movie-card-actions">
+                            <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">Details</a>
+                            <form asp-controller="Movies" asp-action="RemoveFavorite" method="post" style="display:inline; margin-left: .5rem;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@movie.Id" />
+                                <button type="submit" class="danger-link">Remove</button>
+                            </form>
+                            @if (User?.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+                            {
+                                <a asp-controller="Movies" asp-action="Edit" asp-route-id="@movie.Id">Edit</a>
+                                <a asp-controller="Movies" asp-action="Delete" asp-route-id="@movie.Id" class="danger-link">Delete</a>
+                            }
+                        </div>
+                    </div>
+                </article>
+            }
+        </section>
+    }
+</div>

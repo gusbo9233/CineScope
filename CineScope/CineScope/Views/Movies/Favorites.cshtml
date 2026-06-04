@@ -1,0 +1,63 @@
+@model List<CineScope.Models.MovieModel>
+
+@{
+    ViewData["Title"] = "My Favorites";
+}
+
+<div class="cinema-page">
+    <h1>My Favorite Movies</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <p class="text-muted">You have not added any favorites yet.</p>
+    }
+    else
+    {
+        <div class="movie-grid">
+            @foreach (var movie in Model)
+            {
+                <div class="movie-card">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">
+                        @if (!string.IsNullOrWhiteSpace(movie.PosterUrl) && movie.PosterUrl != "N/A")
+                        {
+                            <img src="@movie.PosterUrl" alt="@movie.Title poster" class="poster-thumb" />
+                        }
+                        else
+                        {
+                            <div class="poster-placeholder poster-placeholder-small">@movie.Title</div>
+                        }
+                    </a>
+                    <div class="movie-card-body">
+                        <h3>@movie.Title</h3>
+                        <p class="small text-muted">@movie.ReleaseYear &middot; @movie.Genre</p>
+
+                        <form asp-controller="Movies" asp-action="RemoveFavorite" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@movie.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                        </form>
+
+                        <a class="btn btn-sm btn-primary" asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">Details</a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+/* Minimal local styles for the grid — adapt to your movies.css */
+.movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+.movie-card { border: 1px solid #e2e2e2; padding: .5rem; border-radius: 6px; background: #fff; }
+.poster-thumb { width: 100%; height: auto; display:block; }
+.movie-card-body { padding-top: .5rem; }
+</style>

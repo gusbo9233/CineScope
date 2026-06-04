@@ -4,7 +4,9 @@
     ViewData["Title"] = "Movies";
     var movies = Model ?? new List<CineScope.Models.MovieModel>();
     var heroMovie = movies.OrderByDescending(movie => movie.Rating).FirstOrDefault();
-    var averageRating = movies.Count == 0 ? 0 : movies.Average(movie => (double)movie.Rating);
+    var overallAvg = ViewData["OverallAverageRating"] as decimal?;
+    var totalRatings = ViewData["TotalRatingCount"] as int? ?? 0;
+    var averageRating = overallAvg ?? 0m;
     var totalRuntime = movies.Sum(movie => movie.Duration);
     var genres = movies
         .SelectMany(movie => (movie.Genre ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries))
@@ -41,7 +43,20 @@
             <div class="hero-meta">
                 <span>@(heroMovie?.ReleaseYear.ToString() ?? "Curated")</span>
                 <span>@(heroMovie?.Genre ?? "Movie library")</span>
-                <span>@(heroMovie == null ? "Ready to import" : $"{heroMovie.Rating:0.0} rating")</span>
+                <span>
+                    @if (heroMovie == null)
+                    {
+                        @("Ready to import")
+                    }
+                    else if (heroMovie.Rating == 0)
+                    {
+                        @("Unrated")
+                    }
+                    else
+                    {
+                        @(string.Format("{0:0.0} rating", heroMovie.Rating))
+                    }
+                </span>
             </div>
             <div class="hero-actions">
                 @if (heroMovie != null)
@@ -76,15 +91,22 @@
         </div>
         <div class="metric-card">
             <span>Avg Rating</span>
-            <strong>@averageRating.ToString("0.0")</strong>
-            <small>Across all titles</small>
+            @if (totalRatings == 0)
+            {
+                <strong>Unrated</strong>
+            }
+            else
+            {
+                <strong>@averageRating.ToString("0.0")</strong>
+            }
+            <small>Across all titles</small>        
         </div>
         <div class="metric-card">
             <span>Runtime</span>
             <strong>@totalRuntime</strong>
             <small>Total minutes</small>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" id="genresCard" role="button" tabindex="0" aria-controls="genreRow" aria-expanded="true">
             <span>Genres</span>
             <strong>@genres.Count</strong>
             <small>Top categories</small>
@@ -94,7 +116,7 @@
     <section class="cinema-toolbar" aria-label="Movie actions">
         <div>
             <p class="eyebrow">Browse</p>
-            <h2>Your Collection</h2>
+            <h2>Movies</h2>
         </div>
         <div class="toolbar-actions">
             <a asp-controller="Movies" asp-action="Search" class="btn-cinema btn-cinema-secondary">Import Movie</a>
@@ -106,13 +128,80 @@
 
     @if (genres.Count > 0)
     {
-        <div class="genre-row" aria-label="Available genres">
+        <div class="genre-row" id="genreRow" aria-label="Available genres">
             @foreach (var genre in genres)
             {
-                <span>@genre</span>
+                <button type="button" class="genre-pill" data-genre="@genre">@genre</button>
             }
         </div>
     }
+
+    <script>
+        (function(){
+            var genresCard = document.getElementById('genresCard');
+            var genreRow = document.getElementById('genreRow');
+            var pills = genreRow ? genreRow.querySelectorAll('.genre-pill') : [];
+            var activeGenre = null;
+
+            function setActivePill(pill){
+                pills.forEach(function(p){ p.classList.remove('active'); });
+                if(pill){ pill.classList.add('active'); }
+            }
+
+            function filterMoviesByGenre(genre){
+                var cards = document.querySelectorAll('.movie-card');
+                cards.forEach(function(card){
+                    var genreText = (card.querySelector('.movie-genre') || { textContent: '' }).textContent || '';
+                    if(!genre || genre === ''){
+                        card.style.display = '';
+                        return;
+                    }
+                    var genres = genreText.split(',').map(function(g){ return g.trim().toLowerCase(); });
+                    if(genres.indexOf(genre.toLowerCase()) !== -1){
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            // Toggle visibility of genre row when clicking the metric card
+            if(genresCard && genreRow){
+                genresCard.addEventListener('click', function(){
+                    var expanded = genresCard.getAttribute('aria-expanded') === 'true';
+                    genresCard.setAttribute('aria-expanded', (!expanded).toString());
+                    if(expanded){
+                        genreRow.style.display = 'none';
+                    } else {
+                        genreRow.style.display = '';
+                    }
+                });
+                genresCard.addEventListener('keydown', function(e){
+                    if(e.key === 'Enter' || e.key === ' '){
+                        e.preventDefault();
+                        genresCard.click();
+                    }
+                });
+            }
+
+            // Hook up pills
+            Array.prototype.forEach.call(pills, function(pill){
+                pill.addEventListener('click', function(){
+                    var genre = pill.getAttribute('data-genre');
+                    if(activeGenre === genre){
+                        // clear filter
+                        activeGenre = null;
+                        setActivePill(null);
+                        filterMoviesByGenre(null);
+                    } else {
+                        activeGenre = genre;
+                        setActivePill(pill);
+                        filterMoviesByGenre(genre);
+                    }
+                });
+            });
+        })();
+    </script>
 
     @if (movies.Count == 0)
     {
@@ -147,7 +236,16 @@
                     <div class="movie-card-body">
                         <div class="movie-card-title">
                             <h3>@movie.Title</h3>
-                            <span>@movie.Rating.ToString("0.0")</span>
+                            <span>
+                                @if (movie.Rating == 0)
+                                {
+                                    @("Unrated")
+                                }
+                                else
+                                {
+                                    @(movie.Rating.ToString("0.0"))
+                                }
+                            </span>
                         </div>
                         <p>@movie.ReleaseYear | @movie.Duration min</p>
                         <p class="movie-genre">@movie.Genre</p>

@@ -256,7 +256,11 @@
     gap: .55rem;
 }
 
-.genre-row span {
+.genre-row {
+    align-items: center;
+}
+
+.genre-pill {
     background: rgba(255, 255, 255, .07);
     border: 1px solid var(--line);
     border-radius: 999px;
@@ -264,6 +268,18 @@
     font-size: .83rem;
     font-weight: 800;
     padding: .42rem .75rem;
+    cursor: pointer;
+}
+
+.genre-pill.active {
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    color: #081018;
+    border-color: transparent;
+}
+
+.genre-row[aria-hidden="true"],
+.genre-row[hidden] {
+    display: none !important;
 }
 
 .movie-grid {

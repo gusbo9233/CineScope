@@ -23,4 +23,12 @@
     <PackageReference Include="NuGet.Protocol" Version="6.14.3" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="CineScope\Views\Shared\" />
+    <Folder Include="Views\MovieModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+  </ItemGroup>
+
 </Project>

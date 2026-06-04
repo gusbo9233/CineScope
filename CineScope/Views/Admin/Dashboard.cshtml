@@ -53,7 +53,14 @@
             </article>
             <article class="admin-stat">
                 <span>Avg Rating</span>
-                <strong>@Model.AverageRating.ToString("0.0")</strong>
+                @if ((ViewData["TotalRatingCount"] as int?) == 0)
+                {
+                    <strong>Unrated</strong>
+                }
+                else
+                {
+                    <strong>@Model.AverageRating.ToString("0.0")</strong>
+                }
                 <small>Across all titles</small>
             </article>
             <article class="admin-stat">
@@ -120,103 +127,10 @@
             </article>
         </section>
 
-        <section class="admin-table-panel">
-            <div class="panel-heading table-heading">
-                <div>
-                    <h2>Movie Database</h2>
-                    <span>Edit metadata inline, select rows, and save individual changes.</span>
-                </div>
-                <form id="bulk-delete-form" asp-controller="Admin" asp-action="DeleteSelected" method="post">
-                    <button type="submit" class="btn-cinema btn-cinema-danger" onclick="return confirm('Delete the selected movies?');">Delete Selected</button>
-                </form>
-            </div>
-
-            <div class="admin-table-wrap">
-                <table class="admin-table table align-middle">
-                    <thead>
-                        <tr>
-                            <th scope="col" class="admin-select">
-                                <input class="form-check-input" type="checkbox" id="select-all-movies" aria-label="Select all movies" />
-                            </th>
-                            <th scope="col">Id</th>
-                            <th scope="col">Movie Row</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Movies.Count == 0)
-                        {
-                            <tr>
-                                <td colspan="3" class="admin-empty">No movie rows found.</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var movie in Model.Movies)
-                            {
-                                <tr>
-                                    <td class="admin-select">
-                                        <input class="form-check-input movie-select" form="bulk-delete-form" type="checkbox" name="selectedMovieIds" value="@movie.Id" aria-label="Select @movie.Title" />
-                                    </td>
-                                    <td class="admin-id">@movie.Id</td>
-                                    <td>
-                                        <form method="post" asp-controller="Admin" asp-action="UpdateMovie" class="admin-row-form">
-                                            <input type="hidden" name="Id" value="@movie.Id" />
-                                            <div class="admin-edit-grid">
-                                                <label>
-                                                    <span>Title</span>
-                                                    <input name="Title" value="@movie.Title" class="form-control" aria-label="Title for @movie.Title" />
-                                                </label>
-                                                <label>
-                                                    <span>Genre</span>
-                                                    <input name="Genre" value="@movie.Genre" class="form-control" aria-label="Genre for @movie.Title" />
-                                                </label>
-                                                <label>
-                                                    <span>Year</span>
-                                                    <input name="ReleaseYear" value="@movie.ReleaseYear" class="form-control" type="number" min="1888" max="2100" aria-label="Release year for @movie.Title" />
-                                                </label>
-                                                <label>
-                                                    <span>Rating</span>
-                                                    <input name="Rating" value="@movie.Rating" class="form-control" type="number" min="0" max="10" step="0.1" aria-label="Rating for @movie.Title" />
-                                                </label>
-                                                <label>
-                                                    <span>Minutes</span>
-                                                    <input name="Duration" value="@movie.Duration" class="form-control" type="number" min="0" aria-label="Duration for @movie.Title" />
-                                                </label>
-                                                <label>
-                                                    <span>IMDb</span>
-                                                    <input name="ImdbId" value="@movie.ImdbId" class="form-control" aria-label="IMDb id for @movie.Title" />
-                                                </label>
-                                                <label class="admin-url-field">
-                                                    <span>Poster URL</span>
-                                                    <input name="PosterUrl" value="@movie.PosterUrl" class="form-control" type="url" aria-label="Poster URL for @movie.Title" />
-                                                </label>
-                                                <label class="admin-description-field">
-                                                    <span>Description</span>
-                                                    <textarea name="Description" class="form-control" aria-label="Description for @movie.Title">@movie.Description</textarea>
-                                                </label>
-                                                <div class="admin-row-actions">
-                                                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id">Details</a>
-                                                    <button type="submit">Save</button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </section>
+        <!-- Movie Database panel removed per request. Movie management is available via Movies controller routes. -->
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        document.getElementById('select-all-movies')?.addEventListener('change', function (event) {
-            document.querySelectorAll('.movie-select').forEach(function (checkbox) {
-                checkbox.checked = event.target.checked;
-            });
-        });
-    </script>
+    <!-- No dashboard table scripts required after removal -->
 }

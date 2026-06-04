@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using CineScope.Data;
 using CineScope.Models;
 using CineScope.Services;
-using Microsoft.Identity.Client;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CineScope.Controllers
 {
@@ -24,6 +20,7 @@ namespace CineScope.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> SeedPopularMovies()
         {
             try
@@ -43,6 +40,10 @@ namespace CineScope.Controllers
         public async Task<IActionResult> Index()
         {
             var movies = await _movieService.GetAllMoviesAsync();
+            var overallAvg = await _movieService.GetOverallAverageRatingAsync();
+            var totalRatings = await _movieService.GetTotalRatingCountAsync();
+            ViewData["OverallAverageRating"] = overallAvg;
+            ViewData["TotalRatingCount"] = totalRatings;
             return View(movies);
         }
 
@@ -62,13 +63,16 @@ namespace CineScope.Controllers
 
             // compute average + user rating for the view
             var avg = await _movieService.GetAverageRatingAsync(movie.Id);
+            var ratingCount = await _movieService.GetRatingCountAsync(movie.Id);
             int? userRating = null;
+            bool isFavorite = false;
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!string.IsNullOrEmpty(userId))
                 {
                     userRating = await _movieService.GetUserRatingAsync(movie.Id, userId);
+                    isFavorite = await _movieService.IsFavoriteAsync(movie.Id, userId);
                 }
             }
 
@@ -76,8 +80,11 @@ namespace CineScope.Controllers
             var comments = await _movieService.GetCommentsAsync(movie.Id);
             movie.Comments = comments ?? new List<CineScope.Models.MovieComment>();
 
-            ViewData["AverageRating"] = avg;
+            // only supply AverageRating when there are ratings and average is non-zero; treat 0 as unrated
+            ViewData["AverageRating"] = (ratingCount == 0 || avg == 0m) ? null : (decimal?)avg;
+            ViewData["RatingCount"] = ratingCount;
             ViewData["UserRating"] = userRating;
+            ViewData["IsFavorite"] = isFavorite;
 
             return View(movie);
         }
@@ -113,6 +120,7 @@ namespace CineScope.Controllers
         }
 
         // GET: Movies/Edit/5
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -132,6 +140,7 @@ namespace CineScope.Controllers
         // POST: Movies/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Genre,ReleaseYear,Rating,Duration,PosterUrl,Description")] MovieModel movie)
         {
             if (id != movie.Id)
@@ -158,6 +167,7 @@ namespace CineScope.Controllers
         }
 
         // GET: Movies/Delete/5
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -177,6 +187,7 @@ namespace CineScope.Controllers
         // POST: Movies/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
@@ -224,6 +235,7 @@ namespace CineScope.Controllers
         // POST: Movies/ImportMovie
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> ImportMovie(string imdbId)
         {
             if (User?.Identity?.IsAuthenticated != true)
@@ -307,6 +319,79 @@ namespace CineScope.Controllers
             }
 
             return RedirectToAction(nameof(Details), new { id = movieId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleFavorite(int id)
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return Unauthorized();
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest("Unable to determine user.");
+            }
+
+            try
+            {
+                var currently = await _movieService.IsFavoriteAsync(id, userId);
+                if (currently)
+                {
+                    await _movieService.RemoveFavoriteAsync(id, userId);
+                }
+                else
+                {
+                    await _movieService.AddFavoriteAsync(id, userId);
+                }
+
+                return Json(new { favorited = !currently });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Favorites()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Challenge(); // or Redirect to sign-in
+            }
+
+            var favorites = await _movieService.GetFavoritesAsync(userId);
+            // Use explicit view path to avoid runtime lookup failures
+            return View("~/Views/Movies/Favorites.cshtml", favorites);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> RemoveFavorite(int id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Challenge();
+            }
+
+            try
+            {
+                await _movieService.RemoveFavoriteAsync(id, userId);
+                TempData["SuccessMessage"] = "Removed from favorites.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Could not remove favorite: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Favorites));
         }
 
     }

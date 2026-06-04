@@ -272,6 +272,28 @@ namespace CineScope.Services
             return Math.Round(avg, 1);
         }
 
+        public async Task<decimal?> GetOverallAverageRatingAsync()
+        {
+            var ratings = await _context.Ratings
+                .Select(r => (decimal)r.Stars)
+                .ToListAsync();
+
+            if (ratings == null || ratings.Count == 0)
+                return null;
+
+            return Math.Round(ratings.Average(), 1);
+        }
+
+        public async Task<int> GetTotalRatingCountAsync()
+        {
+            return await _context.Ratings.CountAsync();
+        }
+
+        public async Task<int> GetRatingCountAsync(int movieId)
+        {
+            return await _context.Ratings.CountAsync(r => r.MovieId == movieId);
+        }
+
         public async Task<int?> GetUserRatingAsync(int movieId, string userId)
         {
             var r = await _context.Ratings.FindAsync(movieId, userId);
@@ -306,6 +328,53 @@ namespace CineScope.Services
 
             _context.Comments.Add(movieComment);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task AddFavoriteAsync(int movieId, string userId)
+        {
+            var exists = await _context.Favorites.FindAsync(movieId, userId);
+            if (exists != null) return;
+
+            var fav = new FavoriteMovie
+            {
+                MovieId = movieId,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Favorites.Add(fav);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveFavoriteAsync(int movieId, string userId)
+        {
+            var existing = await _context.Favorites.FindAsync(movieId, userId);
+            if (existing == null) return;
+
+            _context.Favorites.Remove(existing);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> IsFavoriteAsync(int movieId, string userId)
+        {
+            var existing = await _context.Favorites.FindAsync(movieId, userId);
+            return existing != null;
+        }
+
+        public async Task<List<MovieModel>> GetFavoritesAsync(string userId)
+        {
+            var movieIds = await _context.Favorites
+                .Where(f => f.UserId == userId)
+                .Select(f => f.MovieId)
+                .ToListAsync();
+
+            if (movieIds.Count == 0) return new List<MovieModel>();
+
+            var movies = await _context.Movies
+                .Where(m => movieIds.Contains(m.Id))
+                .ToListAsync();
+
+            return movies;
         }
     }
 }

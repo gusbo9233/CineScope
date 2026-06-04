@@ -1,33 +1,17 @@
 @page
-@using CineScope.Pages.Account
-@model LoginModel
+@model CineScope.Pages.Account.LoginModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Signing in";
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header bg-dark text-white">
-                    <h3 class="mb-0">Login to CineScope</h3>
-                </div>
                 <div class="card-body">
-                    @if (User?.Identity?.IsAuthenticated == true)
-                    {
-                        <div class="alert alert-success">
-                            Welcome, <strong>@User.Identity.Name</strong>!
-                        </div>
-                        <p>You are already logged in.</p>
-                        <a href="/" class="btn btn-primary">Go to Home</a>
-                    }
-                    else
-                    {
-                        <p class="mb-4">Sign in with your Microsoft account to access CineScope.</p>
-                        <a href="/MicrosoftIdentity/Account/SignIn?returnUrl=%2F" class="btn btn-primary btn-lg w-100">
-                            Sign In with Microsoft
-                        </a>
-                    }
+                    <p>Redirecting to Microsoft sign-in...</p>
+                    <p class="text-muted">If you are not redirected, use this link:</p>
+                    <a class="btn btn-primary" href="/MicrosoftIdentity/Account/SignIn?returnUrl=%2F">Sign In with Microsoft</a>
                 </div>
             </div>
         </div>
